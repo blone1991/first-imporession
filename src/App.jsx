@@ -112,7 +112,14 @@ export default function App() {
     setRoomCode(code);
   };
 
-  const handleJoin = (code) => enterRoom(code);
+  const handleJoin = async (code) => {
+    if (isFirebaseConfigured) {
+      const snap = await get(ref(db, `rooms/${code}`));
+      if (!snap.exists()) return '존재하지 않는 방 코드예요';
+    }
+    enterRoom(code);
+    return null;
+  };
 
   const handleCreateRoom = async () => {
     let code = makeCode();

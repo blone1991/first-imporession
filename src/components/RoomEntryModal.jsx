@@ -3,11 +3,17 @@ import { useState } from 'react';
 export default function RoomEntryModal({ onJoin, onCreateRoom }) {
   const [code, setCode] = useState('');
   const [creating, setCreating] = useState(false);
+  const [joining, setJoining] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     const trimmed = code.trim().toUpperCase();
     if (!trimmed) return;
-    onJoin(trimmed);
+    setJoining(true);
+    setError('');
+    const err = await onJoin(trimmed);
+    if (err) setError(err);
+    setJoining(false);
   };
 
   const handleCreate = async () => {
@@ -30,20 +36,21 @@ export default function RoomEntryModal({ onJoin, onCreateRoom }) {
             <input
               type="text"
               value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10))}
+              onChange={(e) => { setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10)); setError(''); }}
               onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
               placeholder="입장 코드 입력"
               autoFocus
-              className="flex-1 bg-gray-50 rounded-2xl px-4 py-3 text-sm outline-none border-2 border-transparent focus:border-purple-200 transition-colors font-bold tracking-widest uppercase text-center"
+              className={`flex-1 bg-gray-50 rounded-2xl px-4 py-3 text-sm outline-none border-2 transition-colors font-bold tracking-widest uppercase text-center ${error ? 'border-red-300 bg-red-50' : 'border-transparent focus:border-purple-200'}`}
             />
             <button
               onClick={handleJoin}
-              disabled={!code.trim()}
+              disabled={!code.trim() || joining}
               className="bg-purple-500 text-white font-bold px-5 py-3 rounded-2xl hover:bg-purple-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
             >
-              입장
+              {joining ? '...' : '입장'}
             </button>
           </div>
+          {error && <p className="text-red-400 text-xs text-center -mt-1">{error}</p>}
 
           <div className="flex items-center gap-3 my-1">
             <div className="flex-1 h-px bg-gray-100" />
