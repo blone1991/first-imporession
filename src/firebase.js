@@ -11,9 +11,15 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-export const isFirebaseConfigured = Object.values(firebaseConfig).every(
-  (v) => v && !v.includes('your_')
-);
+const missingKeys = Object.entries(firebaseConfig)
+  .filter(([, v]) => !v || v.includes('your_'))
+  .map(([k]) => k);
+
+if (missingKeys.length > 0) {
+  console.warn('[Firebase] 누락된 환경변수:', missingKeys);
+}
+
+export const isFirebaseConfigured = missingKeys.length === 0;
 
 let db = null;
 
