@@ -7,8 +7,8 @@ export default function MemberDetailModal({ member, impressions, onTagClick, onC
       className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-40"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-bounce-in">
-        <div className="bg-gradient-to-r from-purple-400 to-pink-400 p-5 flex items-center justify-between">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md flex flex-col animate-bounce-in" style={{ maxHeight: '90vh' }}>
+        <div className="bg-gradient-to-r from-purple-400 to-pink-400 p-5 flex items-center justify-between flex-shrink-0 rounded-t-3xl">
           <div className="flex items-center gap-3">
             <div
               className="w-11 h-11 rounded-full flex items-center justify-center text-xl shadow"
@@ -28,7 +28,7 @@ export default function MemberDetailModal({ member, impressions, onTagClick, onC
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="overflow-y-auto flex-1 p-6">
           {impressions.length > 0 ? (
             <>
               <p className="text-center text-xs text-gray-400 mb-4">
@@ -42,10 +42,12 @@ export default function MemberDetailModal({ member, impressions, onTagClick, onC
               <span className="text-xs text-gray-300">첫 번째로 남겨보세요!</span>
             </p>
           )}
+        </div>
 
+        <div className="p-4 pt-0 flex-shrink-0">
           <button
             onClick={onTagClick}
-            className="mt-6 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 rounded-2xl hover:from-purple-600 hover:to-pink-600 active:scale-95 transition-all shadow-md text-sm"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 rounded-2xl hover:from-purple-600 hover:to-pink-600 active:scale-95 transition-all shadow-md text-sm"
           >
             <MessageCirclePlus size={16} />
             익명으로 첫인상 남기기
