@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import { generateRandomAvatar } from '../utils/avatar';
 
 export default function AddMemberModal({ onAdd, onClose }) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [avatar, setAvatar] = useState(() => generateRandomAvatar());
 
   const handleSubmit = async () => {
     const trimmed = name.trim();
     if (!trimmed) return;
     setLoading(true);
-    await onAdd(trimmed);
+    await onAdd(trimmed, avatar);
   };
 
   return (
@@ -29,10 +31,23 @@ export default function AddMemberModal({ onAdd, onClose }) {
         </div>
 
         <div className="p-6 flex flex-col gap-4">
-          <div className="text-center text-3xl py-2">🐾</div>
-          <p className="text-center text-sm text-gray-500 -mt-2">
-            이름을 입력하면 귀여운 아바타 카드가 생성되고<br />
-            다른 분들이 첫인상 태그를 남겨줄 거예요!
+          <div className="flex flex-col items-center gap-2">
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-md transition-all duration-300"
+              style={{ backgroundColor: avatar.bgColor }}
+            >
+              {avatar.emoji}
+            </div>
+            <button
+              onClick={() => setAvatar(generateRandomAvatar())}
+              className="text-xs text-purple-400 hover:text-purple-600 font-semibold transition-colors"
+            >
+              🎲 다시 뽑기
+            </button>
+          </div>
+
+          <p className="text-center text-sm text-gray-400 -mt-1">
+            이 아바타로 카드가 만들어져요
           </p>
 
           <input

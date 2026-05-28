@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ref, onValue, push, set } from 'firebase/database';
 import { db, isFirebaseConfigured } from './firebase';
-import { generateAvatar, generateRandomAvatar } from './utils/avatar';
+import { generateAvatar } from './utils/avatar';
 import MemberCard from './components/MemberCard';
 import TagInputModal from './components/TagInputModal';
 import FlyingTagAnimation from './components/FlyingTagAnimation';
@@ -35,9 +35,9 @@ function useDemoState() {
     ]);
   };
 
-  const addMember = (name) => {
+  const addMember = (name, avatar) => {
     const id = `user_${Date.now()}`;
-    const newMember = { id, name, ...generateRandomAvatar() };
+    const newMember = { id, name, ...avatar };
     setMembers((prev) => [...prev, newMember]);
     return newMember;
   };
@@ -69,9 +69,9 @@ function useFirebaseState() {
     }
   };
 
-  const addMember = async (name) => {
+  const addMember = async (name, avatar) => {
     const id = `user_${Date.now()}`;
-    const newMember = { id, name, ...generateRandomAvatar() };
+    const newMember = { id, name, ...avatar };
     await set(ref(db, `users/${id}`), newMember);
     return newMember;
   };
@@ -97,8 +97,8 @@ export default function App() {
     await addImpressions(targetUserId, tags);
   };
 
-  const handleAddMember = async (name) => {
-    await addMember(name);
+  const handleAddMember = async (name, avatar) => {
+    await addMember(name, avatar);
     setAddMemberOpen(false);
   };
 
