@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ref, onValue, push, set } from 'firebase/database';
 import { db, isFirebaseConfigured } from './firebase';
-import { generateAvatar } from './utils/avatar';
+import { generateAvatar, generateRandomAvatar } from './utils/avatar';
 import MemberCard from './components/MemberCard';
 import TagInputModal from './components/TagInputModal';
 import FlyingTagAnimation from './components/FlyingTagAnimation';
@@ -37,7 +37,7 @@ function useDemoState() {
 
   const addMember = (name) => {
     const id = `user_${Date.now()}`;
-    const newMember = { id, name, ...generateAvatar(id) };
+    const newMember = { id, name, ...generateRandomAvatar() };
     setMembers((prev) => [...prev, newMember]);
     return newMember;
   };
@@ -71,7 +71,7 @@ function useFirebaseState() {
 
   const addMember = async (name) => {
     const id = `user_${Date.now()}`;
-    const newMember = { id, name, ...generateAvatar(id) };
+    const newMember = { id, name, ...generateRandomAvatar() };
     await set(ref(db, `users/${id}`), newMember);
     return newMember;
   };

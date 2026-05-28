@@ -14,3 +14,10 @@ export function generateAvatar(userId) {
     bgColor: PASTEL_COLORS[(absHash * 7) % PASTEL_COLORS.length],
   };
 }
+
+export function generateRandomAvatar() {
+  return {
+    emoji: ANIMALS[Math.floor(Math.random() * ANIMALS.length)],
+    bgColor: PASTEL_COLORS[Math.floor(Math.random() * PASTEL_COLORS.length)],
+  };
+}
