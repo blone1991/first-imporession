@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ref, onValue, push, set } from 'firebase/database';
+import { ref, onValue, push, set, get } from 'firebase/database';
 import { db, isFirebaseConfigured } from './firebase';
 import { generateAvatar } from './utils/avatar';
 import MemberCard from './components/MemberCard';
@@ -18,6 +18,23 @@ const SAMPLE_MEMBERS = [
   { id: 'user6', name: '한가을' },
 ];
 
+const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+function makeCode() {
+  return Array.from({ length: 6 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
+}
+
+function getRoomCodeFromURL() {
+  return new URLSearchParams(window.location.search).get('room');
+}
+
+function setRoomCodeInURL(code) {
+  const url = new URL(window.location.href);
+  if (code) url.searchParams.set('room', code);
+  else url.searchParams.delete('room');
+  window.history.pushState({}, '', url);
+}
+
 function useDemoState() {
   const [members, setMembers] = useState(() =>
     SAMPLE_MEMBERS.map((m) => ({ ...m, ...generateAvatar(m.id) }))
@@ -27,12 +44,7 @@ function useDemoState() {
   const addImpressions = (targetUserId, tags) => {
     setImpressions((prev) => [
       ...prev,
-      ...tags.map((tag) => ({
-        id: `${Date.now()}_${Math.random()}`,
-        targetUserId,
-        tagText: tag,
-        timestamp: Date.now(),
-      })),
+      ...tags.map((tag) => ({ id: `${Date.now()}_${Math.random()}`, targetUserId, tagText: tag, timestamp: Date.now() })),
     ]);
   };
 
@@ -65,9 +77,8 @@ function useFirebaseState(roomCode) {
   }, [roomCode]);
 
   const addImpressions = async (targetUserId, tags) => {
-    const impressionsRef = ref(db, `rooms/${roomCode}/impressions`);
     for (const tag of tags) {
-      await push(impressionsRef, { targetUserId, tagText: tag, timestamp: Date.now() });
+      await push(ref(db, `rooms/${roomCode}/impressions`), { targetUserId, tagText: tag, timestamp: Date.now() });
     }
   };
 
@@ -82,7 +93,8 @@ function useFirebaseState(roomCode) {
 }
 
 export default function App() {
-  const [roomCode, setRoomCode] = useState(() => localStorage.getItem('room_code'));
+  const [roomCode, setRoomCode] = useState(() => getRoomCodeFromURL() ?? localStorage.getItem('room_code'));
+  const [copied, setCopied] = useState(false);
 
   const { members, impressions, addImpressions, addMember } = isFirebaseConfigured
     ? useFirebaseState(roomCode)
@@ -94,16 +106,40 @@ export default function App() {
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const cardRefs = useRef({});
 
-  const handleEnterRoom = (code) => {
+  const enterRoom = (code) => {
     localStorage.setItem('room_code', code);
+    setRoomCodeInURL(code);
     setRoomCode(code);
+  };
+
+  const handleJoin = (code) => enterRoom(code);
+
+  const handleCreateRoom = async () => {
+    let code = makeCode();
+    if (isFirebaseConfigured) {
+      // 중복 확인 (최대 5회 시도)
+      for (let i = 0; i < 5; i++) {
+        const snap = await get(ref(db, `rooms/${code}`));
+        if (!snap.exists()) break;
+        code = makeCode();
+      }
+    }
+    enterRoom(code);
   };
 
   const handleLeaveRoom = () => {
     localStorage.removeItem('room_code');
+    setRoomCodeInURL(null);
     setRoomCode(null);
     setDetailTarget(null);
     setTagTarget(null);
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}?room=${roomCode}`;
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleTagSubmit = async (targetUserId, tags) => {
@@ -118,12 +154,8 @@ export default function App() {
     setAddMemberOpen(false);
   };
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(roomCode);
-  };
-
   if (isFirebaseConfigured && !roomCode) {
-    return <RoomEntryModal onEnter={handleEnterRoom} />;
+    return <RoomEntryModal onJoin={handleJoin} onCreateRoom={handleCreateRoom} />;
   }
 
   return (
@@ -148,11 +180,10 @@ export default function App() {
               <span className="text-gray-400 text-xs">방 코드</span>
               <span className="font-black text-purple-600 tracking-widest">{roomCode}</span>
               <button
-                onClick={handleCopyCode}
-                className="text-gray-400 hover:text-purple-500 text-xs transition-colors"
-                title="복사"
+                onClick={handleShare}
+                className="text-xs font-semibold transition-colors px-2 py-0.5 rounded-full bg-purple-50 hover:bg-purple-100 text-purple-500"
               >
-                복사
+                {copied ? '복사됨 ✓' : '공유'}
               </button>
               <span className="text-gray-200">|</span>
               <button
@@ -194,9 +225,7 @@ export default function App() {
           </div>
         )}
 
-        <p className="text-center text-xs text-gray-400 mt-8">
-          모든 첫인상은 익명으로 전달됩니다
-        </p>
+        <p className="text-center text-xs text-gray-400 mt-8">모든 첫인상은 익명으로 전달됩니다</p>
       </div>
 
       {detailTarget && (
