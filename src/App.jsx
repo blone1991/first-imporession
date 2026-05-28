@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ref, onValue, push, set, get } from 'firebase/database';
+import { ref, onValue, push, set } from 'firebase/database';
 import { db, isFirebaseConfigured } from './firebase';
 import { generateAvatar } from './utils/avatar';
 import MemberCard from './components/MemberCard';
@@ -50,18 +50,9 @@ function useFirebaseState() {
   const [impressions, setImpressions] = useState([]);
 
   useEffect(() => {
-    const membersRef = ref(db, 'users');
-    get(membersRef).then((snapshot) => {
-      if (!snapshot.exists()) {
-        const initial = {};
-        SAMPLE_MEMBERS.forEach((m) => {
-          initial[m.id] = { ...m, ...generateAvatar(m.id) };
-        });
-        set(membersRef, initial);
-      }
-    });
-    return onValue(membersRef, (snapshot) => {
+    return onValue(ref(db, 'users'), (snapshot) => {
       if (snapshot.exists()) setMembers(Object.values(snapshot.val()));
+      else setMembers([]);
     });
   }, []);
 
